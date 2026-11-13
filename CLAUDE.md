@@ -11,13 +11,15 @@ The site is static HTML/CSS/vanilla JS with no build step, package manager or te
 ## Architecture
 
 - `index.html` holds the single-page layout: header, hero, values strip, shop, about, gifts, contact, footer, and a `<dialog>` for product details.
-- `js/products.js` is the **single source of truth for the catalogue**. It defines the `CATEGORIES` map and the `PRODUCTS` array as plain globals, loaded via `<script>` (not fetched JSON), so the site also works from `file://`. Product facts (names, sizes, variants, ingredients) were transcribed from the labels in the product photos. Don't invent product claims.
-- `js/main.js` renders the category filter tabs and product cards from that data, and opens the product dialog. The dialog is driven by the URL hash `#product/<id>`, so product links are shareable and the back button closes it.
+- `js/products.js` is the **single source of truth for the catalogue and contact details**. It defines `CATEGORIES`, `PRODUCTS` and `CONTACT` as plain globals, loaded via `<script>` (not fetched JSON), so the site also works from `file://`. Each product has `prices` (in rand; `addon: true` items such as refills are excluded from the card's "From R…" price), `intro` paragraphs, structured `sections` (title + paragraphs and/or `{term, text}` lists), and an optional `tip` and `note`. The reed diffusers share their prices, how-to and tip through constants at the top of the file.
+- `js/main.js` renders the category filter tabs and product cards from that data, and opens the product dialog (prices, a WhatsApp order link prefilled with the product name, then the full description). The dialog is driven by the URL hash `#product/<id>`, so product links are shareable and the back button closes it. A product with `images: []` shows the monogram logo as a placeholder.
 - `css/styles.css` contains all styles. Design tokens are on `:root`.
 
-## Content status
+## Content sources
 
-Product descriptions are **still pending from the business owner**. Every `description` field in `js/products.js` is currently `""`, and the dialog shows "Full description coming soon." until it is filled. The About section copy in `index.html` is placeholder text (marked with a TODO comment) until the owner supplies their story. The only contact channel known so far is Instagram, @naturallynella (from the market-stall sign photo).
+The owner's source material is kept locally but is **git-ignored** (the repo is public): `description/Descriptions on Products .docx` holds the product copy, and `img/price-list/` holds the price list and castor oil flyer. Copy and prices on the site are transcribed from these. Where they conflict with the older product photos' labels (body butter scents and ingredients, soak salts, castor oil sizes), the documents win. Product names follow the label spelling, e.g. "Breathe & Bloom".
+
+Still outstanding: a description for Rose & Lavender Reverie (it currently shows "Full description coming soon."), a photo for Room & Linen Mist, and the owner's own About story (the About text in `index.html` is a placeholder with a TODO comment). Contact details are WhatsApp/call Danelle 084 505 1127 (also the `wa.me` order number), Cathy 072 338 9601, and Instagram @naturallynella.
 
 ## Brand rules
 

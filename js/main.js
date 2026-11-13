@@ -45,16 +45,33 @@
   });
 
   /* ---------- Product grid ---------- */
+  const PLACEHOLDER_IMG = "img/logo/logo-monogram.jpg";
+  const formatPrice = (n) => `R${n}`;
+
+  function fromPrice(p) {
+    const main = (p.prices || []).filter((x) => !x.addon);
+    return main.length ? Math.min(...main.map((x) => x.price)) : null;
+  }
+
+  function whatsappLink(product) {
+    const text = product
+      ? `Hi Naturally Nella! I'd like to order / ask about: ${product.name}`
+      : "Hi Naturally Nella!";
+    return `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(text)}`;
+  }
+
   function renderProducts() {
     const items = PRODUCTS.filter(
       (p) => activeFilter === "all" || p.category === activeFilter
     );
     grid.replaceChildren(
-      ...items.map((p) =>
-        el("article", { class: "product-card" }, [
+      ...items.map((p) => {
+        const from = fromPrice(p);
+        const hasImg = p.images.length > 0;
+        return el("article", { class: "product-card" }, [
           el("button", { class: "card-hit", "data-id": p.id, "aria-label": `View ${p.name}` }, [
-            el("div", { class: "card-media" }, [
-              el("img", { src: p.images[0], alt: p.name, loading: "lazy" }),
+            el("div", { class: hasImg ? "card-media" : "card-media is-placeholder" }, [
+              el("img", { src: hasImg ? p.images[0] : PLACEHOLDER_IMG, alt: hasImg ? p.name : "", loading: "lazy" }),
               p.images.length > 1
                 ? el("span", { class: "card-count", text: `${p.images.length} photos` })
                 : null,
@@ -63,10 +80,13 @@
               el("p", { class: "card-category", text: CATEGORIES[p.category] }),
               el("h3", { class: "card-title", text: p.name }),
               el("p", { class: "card-tagline", text: p.tagline }),
+              from !== null
+                ? el("p", { class: "card-price", text: `From ${formatPrice(from)}` })
+                : null,
             ]),
           ]),
-        ])
-      )
+        ]);
+      })
     );
   }
 
@@ -84,9 +104,19 @@
     tagline: dialog.querySelector(".dialog-tagline"),
     description: dialog.querySelector(".dialog-description"),
     meta: dialog.querySelector(".dialog-meta"),
+    prices: dialog.querySelector(".dialog-prices"),
+    whatsapp: dialog.querySelector(".dialog-whatsapp"),
+    gallery: dialog.querySelector(".dialog-gallery"),
   };
 
   function showImage(product, index) {
+    const hasImg = product.images.length > 0;
+    dlg.gallery.classList.toggle("is-placeholder", !hasImg);
+    if (!hasImg) {
+      dlg.mainImg.src = PLACEHOLDER_IMG;
+      dlg.mainImg.alt = "";
+      return;
+    }
     dlg.mainImg.src = product.images[index];
     dlg.mainImg.alt = `${product.name}, photo ${index + 1} of ${product.images.length}`;
     dlg.thumbs.querySelectorAll("button").forEach((b, i) =>
@@ -102,23 +132,58 @@
     dlg.title.textContent = p.name;
     dlg.tagline.textContent = p.tagline;
 
-    const paragraphs = (p.description || "").split(/\n\s*\n/).filter((s) => s.trim());
-    dlg.description.replaceChildren(
-      ...(paragraphs.length
-        ? paragraphs.map((t) => el("p", { text: t.trim() }))
-        : [el("p", { class: "coming-soon", text: "Full description coming soon." })])
+    // Prices
+    dlg.prices.replaceChildren(
+      ...(p.prices || []).map((x) =>
+        el("li", {}, [
+          el("span", { class: "price-label" }, [
+            x.label,
+            x.note ? el("small", { text: x.note }) : null,
+          ]),
+          el("span", { class: "price-value", text: formatPrice(x.price) }),
+        ])
+      )
     );
+    dlg.prices.hidden = !(p.prices && p.prices.length);
+    dlg.whatsapp.href = whatsappLink(p);
 
-    const meta = [];
-    if (p.variants) meta.push(["Available in", p.variants.join(", ")]);
-    if (p.sizes) meta.push(["Size", p.sizes.join(" / ")]);
-    if (p.details) meta.push(["Details", p.details]);
+    // Variants
     dlg.meta.replaceChildren(
-      ...meta.flatMap(([term, value]) => [
-        el("dt", { text: term }),
-        el("dd", {}, [].concat(value).map((v) => el("span", { text: v }))),
-      ])
+      ...(p.variants
+        ? [el("dt", { text: "Available in" }), el("dd", { text: p.variants.join(" · ") })]
+        : [])
     );
+    dlg.meta.hidden = !p.variants;
+
+    // Long description
+    const blocks = [];
+    const intro = p.intro || [];
+    if (!intro.length) {
+      blocks.push(el("p", { class: "coming-soon", text: "Full description coming soon." }));
+    }
+    intro.forEach((t) => blocks.push(el("p", { text: t })));
+    (p.sections || []).forEach((s) => {
+      const section = el("section", { class: "desc-section" });
+      if (s.title) section.append(el("h4", { text: s.title }));
+      (s.paragraphs || []).forEach((t) => section.append(el("p", { text: t })));
+      if (s.list) {
+        section.append(
+          el("ul", { class: "desc-list" },
+            s.list.map((item) =>
+              el("li", {}, [
+                item.term ? el("strong", { text: item.term }) : null,
+                item.text,
+              ])
+            )
+          )
+        );
+      }
+      blocks.push(section);
+    });
+    if (p.tip) blocks.push(el("p", { class: "desc-callout" }, [el("strong", { text: "Tip: " }), p.tip]));
+    if (p.note) blocks.push(el("p", { class: "desc-callout desc-note" }, [el("strong", { text: "Please note: " }), p.note]));
+    dlg.description.replaceChildren(...blocks);
+    dlg.description.closest(".dialog-info").scrollTop = 0;
 
     dlg.thumbs.replaceChildren(
       ...(p.images.length > 1
@@ -176,6 +241,7 @@
 
   /* ---------- Init ---------- */
   document.getElementById("year").textContent = new Date().getFullYear();
+  document.querySelectorAll("[data-whatsapp]").forEach((a) => (a.href = whatsappLink()));
   renderFilters();
   renderProducts();
   syncFromHash();
