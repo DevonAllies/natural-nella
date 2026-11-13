@@ -239,6 +239,55 @@
     }
   });
 
+  /* ---------- Contact form (FormSubmit) ---------- */
+  const form = document.getElementById("contact-form");
+  const topicSelect = document.getElementById("contact-topic");
+  const formStatus = form.querySelector(".form-status");
+
+  // Buttons like "Enquire about gifts" pre-select a topic.
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest("[data-topic]");
+    if (link) topicSelect.value = link.dataset.topic;
+  });
+
+  function setStatus(text, kind) {
+    formStatus.textContent = text;
+    formStatus.className = `form-status${kind ? ` is-${kind}` : ""}`;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const button = form.querySelector('button[type="submit"]');
+    const data = Object.fromEntries(new FormData(form));
+    if (data._honey) return; // bot filled the hidden field
+
+    button.disabled = true;
+    setStatus("Sending…");
+    try {
+      const res = await fetch(form.action.replace("formsubmit.co/", "formsubmit.co/ajax/"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && String(json.success) === "true") {
+        form.classList.add("is-sent");
+        setStatus("Thank you! Your message has been sent. We'll be in touch soon.", "success");
+        form.reset();
+        return;
+      }
+      throw new Error(json.message || `HTTP ${res.status}`);
+    } catch (err) {
+      console.error("Contact form error:", err);
+      setStatus(
+        `Sorry, your message couldn't be sent. Please email us at ${CONTACT.email} or WhatsApp ${CONTACT.phones[0].display}.`,
+        "error"
+      );
+    } finally {
+      button.disabled = false;
+    }
+  });
+
   /* ---------- Init ---------- */
   document.getElementById("year").textContent = new Date().getFullYear();
   document.querySelectorAll("[data-whatsapp]").forEach((a) => (a.href = whatsappLink()));
