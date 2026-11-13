@@ -192,7 +192,7 @@ const PRODUCTS = [
       "img/products/shower-steamer-jars.jpg",
       "img/products/shower-steamer-showcase-jar.jpg",
     ],
-    variants: ["Breathe & Bloom", "Sunset & Serenity", "Rosé & Relax"],
+    variants: ["Breath & Bloom", "Sunset & Serenity", "Rosé & Relax"],
     prices: [
       { label: "Shower steamer pouch", price: 85 },
       { label: "Showcase jar", price: 95 },
@@ -204,7 +204,7 @@ const PRODUCTS = [
       {
         title: "Three amazing blends",
         list: [
-          { term: "Breathe & Bloom", text: "Perfect for hay fever and allergy season. A wonderfully clearing blend of eucalyptus, tea tree, lavender, and peppermint essential oils." },
+          { term: "Breath & Bloom", text: "Perfect for hay fever and allergy season. A wonderfully clearing blend of eucalyptus, tea tree, lavender, and peppermint essential oils." },
           { term: "Sunset & Serenity", text: "Feel happy and relaxed at the same time. A wonderfully uplifting blend of yellow mandarin, sweet orange, and lavender essential oils." },
           { term: "Rosé & Relax", text: "Perfect for those long days. A wonderfully calming blend of rose geranium and lavender essential oils." },
         ],

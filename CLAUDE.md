@@ -17,7 +17,7 @@ The site is static HTML/CSS/vanilla JS with no build step, package manager or te
 
 ## Content sources
 
-The owner's source material is kept locally but is **git-ignored** (the repo is public): `description/Descriptions on Products .docx` holds the product copy, and `img/price-list/` holds the price list and castor oil flyer. Copy and prices on the site are transcribed from these. Where they conflict with the older product photos' labels (body butter scents and ingredients, soak salts, castor oil sizes), the documents win. Product names follow the label spelling, e.g. "Breathe & Bloom".
+The owner's source material is kept locally but is **git-ignored** (the repo is public): `description/Descriptions on Products .docx` holds the product copy, and `img/price-list/` holds the price list and castor oil flyer. Copy and prices on the site are transcribed from these. Where they conflict with the older product photos' labels (body butter scents and ingredients, soak salts, castor oil sizes), the documents win. The documents also win on spelling, e.g. "Breath & Bloom" (confirmed by the owner; some labels print "Breathe").
 
 Still outstanding: a description for Rose & Lavender Reverie (it currently shows "Full description coming soon."), a photo for Room & Linen Mist, and the owner's own About story (the About text in `index.html` is a placeholder with a TODO comment). Contact details are WhatsApp/call Danelle 084 505 1127 (also the `wa.me` order number), Cathy 072 338 9601, email naturallynella3@gmail.com, and Instagram @naturallynella. The contact block in `index.html` is static markup, so keep it in sync with `CONTACT` in `js/products.js`.
 
