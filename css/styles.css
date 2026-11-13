@@ -309,7 +309,7 @@ h1 em, h2 em { color: var(--rose); font-style: italic; }
 }
 .contact-people li { display: flex; flex-direction: column; }
 .contact-people span { font-size: 0.72rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--charcoal-soft); }
-.contact-people a { font-family: var(--font-serif); font-size: 1.6rem; color: var(--rose); text-decoration: none; }
+.contact-people a { font-family: var(--font-serif); font-size: 1.6rem; color: var(--rose); text-decoration: none; overflow-wrap: anywhere; }
 .contact-people a:hover { text-decoration: underline; }
 .contact-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.75rem; }
 
