@@ -551,7 +551,8 @@ const DELIVERY = [
   {
     id: "collection",
     label: "Collection in Kuils River",
-    note: "",
+    // The address is kept off the website (it is public); Danelle sends it on WhatsApp.
+    note: "We'll send you the collection address and a map pin on WhatsApp when we confirm your order.",
     fee: 0,
     address: false,
   },

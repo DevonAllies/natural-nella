@@ -684,6 +684,7 @@
     const url = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(orderMessage(order, t))}`;
     if (!isBot) emailOrder(order, t);
     cartDialog.querySelector(".cart-done-number").textContent = order.number;
+    cartDialog.querySelector(".cart-done-collection").hidden = t.delivery.id !== "collection";
 
     // The order now lives in the WhatsApp message, so empty the basket.
     cart = [];
