@@ -446,6 +446,7 @@
   const pinInput = cartForm.elements.pin;
   const locateBtn = cartForm.querySelector(".cart-locate");
   const locationStatus = cartForm.querySelector(".cart-location-status");
+  const MAX_PIN_ACCURACY_M = 250;
   const mapLink = (query) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 
   function setPin(pin) {
@@ -472,6 +473,17 @@
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         locateBtn.disabled = false;
+        // Computers without GPS guess from the internet connection, which can be
+        // kilometres out. Only keep a pin that is accurate enough to deliver to.
+        const accuracy = pos.coords.accuracy;
+        if (!(accuracy <= MAX_PIN_ACCURACY_M)) {
+          setPin("");
+          const roughly = accuracy >= 1000 ? `${Math.round(accuracy / 1000)} km` : `${Math.round(accuracy)} m`;
+          locationStatus.textContent =
+            `Your device could only find your location roughly (within about ${roughly}), so we haven't added a pin. ` +
+            "Your address is enough, or try again on your phone.";
+          return;
+        }
         setPin(`${pos.coords.latitude.toFixed(6)},${pos.coords.longitude.toFixed(6)}`);
       },
       (err) => {
