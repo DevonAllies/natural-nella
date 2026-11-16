@@ -584,7 +584,7 @@
   // Optional Google Sheet order list (google-apps-script/SETUP.md). It numbers the
   // order NN-0001, NN-0002, ... and adds a row. Returns null if it isn't set up or
   // doesn't answer in time, and the order then gets a random number instead.
-  const SHEET_TIMEOUT_MS = 8000;
+  const SHEET_TIMEOUT_MS = 20000;
 
   async function recordOrder(o, t) {
     const url = typeof ORDER_SHEET !== "undefined" && ORDER_SHEET.url;
