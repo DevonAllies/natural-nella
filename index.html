@@ -22,16 +22,22 @@
       <a href="#top" class="brand" aria-label="Naturally Nella home">
         <img src="img/logo/logo-wordmark-trimmed.jpg" alt="Naturally Nella" width="802" height="451">
       </a>
-      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">
-        <span class="sr-only">Menu</span>
-        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-      </button>
       <nav id="site-nav" class="site-nav">
         <a href="#shop">Shop</a>
         <a href="#about">About</a>
         <a href="#gifts">Gifts</a>
         <a href="#contact">Contact</a>
       </nav>
+      <div class="header-tools">
+        <button class="cart-toggle" type="button" aria-label="Basket, 0 items">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M6 8h12l-1 12H7L6 8Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 10V6a3 3 0 0 1 6 0v4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="cart-count" hidden>0</span>
+        </button>
+        <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">
+          <span class="sr-only">Menu</span>
+          <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -198,13 +204,67 @@
         <p class="eyebrow dialog-category"></p>
         <h3 id="dialog-title"></h3>
         <p class="dialog-tagline"></p>
-        <dl class="dialog-meta"></dl>
-        <ul class="dialog-prices" aria-label="Prices"></ul>
+        <form class="dialog-order">
+          <fieldset class="dialog-sizes">
+            <legend class="sr-only">Choose a size</legend>
+            <ul class="dialog-prices"></ul>
+          </fieldset>
+          <label class="field dialog-variant">
+            <span>Scent</span>
+            <select name="variant" required></select>
+          </label>
+          <div class="dialog-buy">
+            <div class="qty" data-qty>
+              <button type="button" data-step="-1" aria-label="Fewer">&minus;</button>
+              <input type="number" name="qty" value="1" min="1" max="20" inputmode="numeric" aria-label="Quantity">
+              <button type="button" data-step="1" aria-label="More">+</button>
+            </div>
+            <button type="submit" class="btn btn-primary">Add to basket</button>
+          </div>
+          <p class="dialog-added" role="status"></p>
+        </form>
         <div class="dialog-actions">
-          <a class="btn btn-primary dialog-whatsapp" href="#" target="_blank" rel="noopener">Order on WhatsApp</a>
+          <a class="btn btn-ghost dialog-whatsapp" href="#" target="_blank" rel="noopener">Ask on WhatsApp</a>
           <a class="btn btn-ghost" href="https://www.instagram.com/_naturallynella_/" target="_blank" rel="noopener">Instagram</a>
         </div>
         <div class="dialog-description"></div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="cart-dialog" aria-labelledby="cart-title">
+    <div class="cart-panel">
+      <button class="dialog-close cart-close" aria-label="Close basket">&times;</button>
+      <p class="eyebrow">Order on WhatsApp</p>
+      <h2 id="cart-title">Your basket</h2>
+      <div class="cart-empty">
+        <p>Your basket is empty.</p>
+        <a href="#shop" class="btn btn-ghost cart-browse">Browse the collection</a>
+      </div>
+      <div class="cart-filled">
+        <ul class="cart-items"></ul>
+        <p class="cart-total"><span>Total</span><span class="cart-total-value"></span></p>
+        <form class="cart-form">
+          <label class="field">
+            <span>Your name</span>
+            <input type="text" name="name" autocomplete="name" required>
+          </label>
+          <fieldset class="field cart-method">
+            <legend>Delivery or collection</legend>
+            <label><input type="radio" name="method" value="Delivery" required> Delivery</label>
+            <label><input type="radio" name="method" value="Collection"> Collection</label>
+          </fieldset>
+          <label class="field cart-address" hidden>
+            <span>Delivery address</span>
+            <textarea name="address" rows="3" autocomplete="street-address"></textarea>
+          </label>
+          <p class="cart-fine">We'll confirm availability, delivery costs and payment with you on WhatsApp.</p>
+          <button type="submit" class="btn btn-primary cart-send">Send order on WhatsApp</button>
+          <div class="cart-sent" hidden>
+            <p>WhatsApp should now be open with your order. Tap send there to place it.</p>
+            <button type="button" class="btn btn-ghost cart-clear">Clear basket</button>
+          </div>
+        </form>
       </div>
     </div>
   </dialog>

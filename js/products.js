@@ -10,8 +10,9 @@
  *   category  key of CATEGORIES
  *   tagline   short line shown on the card and under the dialog title
  *   images    paths relative to the site root; first is the card image. [] shows a logo placeholder.
- *   variants  scents / blends available (optional)
+ *   variants  scents / blends available (optional; customers must pick one when ordering)
  *   prices    [{ label, price, note?, addon? }]; card shows "From R<min>" ignoring addon items
+ *             (renaming a label drops that size from visitors' saved baskets)
  *   intro     array of paragraphs (empty array => a "more details coming soon" message)
  *   sections  [{ title, paragraphs?: [..], list?: [{ term?, text }] }]
  *   tip, note optional single paragraphs shown at the end

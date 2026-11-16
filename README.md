@@ -19,6 +19,10 @@ All products, prices and contact details live in [`js/products.js`](js/products.
 
 To add a product, add an entry to `PRODUCTS` and put its photos in `img/products/`. A product with no photos (`images: []`) shows the logo instead.
 
+## Ordering
+
+Visitors add products to a basket (choosing size, scent and quantity), then send the whole order to Danelle's WhatsApp with their name and whether they want delivery or collection. Nothing is paid on the site: availability, delivery costs and payment are arranged on WhatsApp. The basket is saved in the visitor's own browser.
+
 ## Editing other copy
 
 The About section ("Our story"), the Gifts section and the contact details are in [`index.html`](index.html). The About text is the owner's own story, so don't reword it. The contact block in `index.html` is static, so keep it in sync with `CONTACT` in `js/products.js`.

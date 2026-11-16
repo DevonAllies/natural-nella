@@ -103,8 +103,13 @@
     title: dialog.querySelector("#dialog-title"),
     tagline: dialog.querySelector(".dialog-tagline"),
     description: dialog.querySelector(".dialog-description"),
-    meta: dialog.querySelector(".dialog-meta"),
+    order: dialog.querySelector(".dialog-order"),
+    sizes: dialog.querySelector(".dialog-sizes"),
     prices: dialog.querySelector(".dialog-prices"),
+    variantField: dialog.querySelector(".dialog-variant"),
+    variant: dialog.querySelector(".dialog-variant select"),
+    qty: dialog.querySelector('.dialog-order input[name="qty"]'),
+    added: dialog.querySelector(".dialog-added"),
     whatsapp: dialog.querySelector(".dialog-whatsapp"),
     gallery: dialog.querySelector(".dialog-gallery"),
   };
@@ -132,28 +137,37 @@
     dlg.title.textContent = p.name;
     dlg.tagline.textContent = p.tagline;
 
-    // Prices
+    // Order form: one radio per size/price, a scent picker, quantity
+    const prices = p.prices || [];
+    dlg.order.dataset.id = p.id;
     dlg.prices.replaceChildren(
-      ...(p.prices || []).map((x) =>
+      ...prices.map((x, i) =>
         el("li", {}, [
-          el("span", { class: "price-label" }, [
-            x.label,
-            x.note ? el("small", { text: x.note }) : null,
+          el("label", {}, [
+            el("input", { type: "radio", name: "size", value: x.label, required: "" }),
+            el("span", { class: "price-label" }, [
+              x.label,
+              x.note ? el("small", { text: x.note }) : null,
+            ]),
+            el("span", { class: "price-value", text: formatPrice(x.price) }),
           ]),
-          el("span", { class: "price-value", text: formatPrice(x.price) }),
         ])
       )
     );
-    dlg.prices.hidden = !(p.prices && p.prices.length);
-    dlg.whatsapp.href = whatsappLink(p);
+    const firstSize = dlg.prices.querySelector("input");
+    if (firstSize) firstSize.checked = true;
+    dlg.order.hidden = !prices.length;
 
-    // Variants
-    dlg.meta.replaceChildren(
-      ...(p.variants
-        ? [el("dt", { text: "Available in" }), el("dd", { text: p.variants.join(" · ") })]
-        : [])
+    dlg.variant.replaceChildren(
+      el("option", { value: "", text: "Choose a scent" }),
+      ...(p.variants || []).map((v) => el("option", { value: v, text: v }))
     );
-    dlg.meta.hidden = !p.variants;
+    dlg.variantField.hidden = !p.variants;
+    dlg.variant.disabled = !p.variants;
+    dlg.qty.value = 1;
+    dlg.added.replaceChildren();
+
+    dlg.whatsapp.href = whatsappLink(p);
 
     // Long description
     const blocks = [];
@@ -226,6 +240,201 @@
   }
   window.addEventListener("hashchange", syncFromHash);
 
+  /* ---------- Basket ---------- */
+  // Kept in the visitor's browser only. Items store the product id, size label and
+  // scent; prices are looked up from PRODUCTS when shown, so price edits apply.
+  const CART_KEY = "nn-basket";
+  const MAX_QTY = 20;
+  const cartDialog = document.querySelector(".cart-dialog");
+  const cartToggle = document.querySelector(".cart-toggle");
+  const cartCount = cartToggle.querySelector(".cart-count");
+  const cartForm = cartDialog.querySelector(".cart-form");
+  const cartItemsEl = cartDialog.querySelector(".cart-items");
+  const cartAddress = cartDialog.querySelector(".cart-address");
+  const cartSent = cartDialog.querySelector(".cart-sent");
+
+  const clampQty = (n) => Math.min(MAX_QTY, Math.max(1, Math.round(Number(n)) || 1));
+
+  function resolve(item) {
+    const product = PRODUCTS.find((x) => x.id === item.id);
+    const price = product && (product.prices || []).find((x) => x.label === item.label);
+    return product && price ? { product, price } : null;
+  }
+
+  function loadCart() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+      return Array.isArray(saved) ? saved.filter((i) => i && resolve(i)) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  let cart = loadCart();
+
+  function saveCart() {
+    try {
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    } catch {
+      /* storage unavailable (private mode etc.); the basket still works for this visit */
+    }
+  }
+
+  function addToCart(id, label, variant, qty) {
+    const existing = cart.find((i) => i.id === id && i.label === label && i.variant === variant);
+    if (existing) existing.qty = clampQty(existing.qty + qty);
+    else cart.push({ id, label, variant, qty: clampQty(qty) });
+    cartChanged();
+  }
+
+  function cartChanged() {
+    saveCart();
+    renderCart();
+  }
+
+  const lineTotal = (item) => resolve(item).price.price * item.qty;
+  const cartTotal = () => cart.reduce((sum, i) => sum + lineTotal(i), 0);
+
+  function renderCart() {
+    const count = cart.reduce((n, i) => n + i.qty, 0);
+    cartCount.textContent = count;
+    cartCount.hidden = count === 0;
+    cartToggle.setAttribute("aria-label", `Basket, ${count} item${count === 1 ? "" : "s"}`);
+    cartDialog.classList.toggle("is-empty", cart.length === 0);
+    cartSent.hidden = true;
+
+    cartItemsEl.replaceChildren(
+      ...cart.map((item, index) => {
+        const { product, price } = resolve(item);
+        return el("li", { class: "cart-item" }, [
+          el("div", { class: "cart-item-info" }, [
+            el("p", { class: "cart-item-name", text: product.name }),
+            el("p", { class: "cart-item-detail" }, [
+              [price.label, item.variant].filter(Boolean).join(" · "),
+              price.note ? el("small", { text: price.note }) : null,
+            ]),
+          ]),
+          el("div", { class: "cart-item-controls" }, [
+            el("div", { class: "qty", "data-qty": "" }, [
+              el("button", { type: "button", "data-step": "-1", "aria-label": `Fewer ${product.name}` , text: "−" }),
+              el("input", { type: "number", value: item.qty, min: 1, max: MAX_QTY, inputmode: "numeric", "aria-label": `Quantity of ${product.name}`, "data-index": index }),
+              el("button", { type: "button", "data-step": "1", "aria-label": `More ${product.name}`, text: "+" }),
+            ]),
+            el("span", { class: "cart-item-price", text: formatPrice(lineTotal(item)) }),
+            el("button", { type: "button", class: "cart-remove", "data-remove": index, text: "Remove" }),
+          ]),
+        ]);
+      })
+    );
+    cartDialog.querySelector(".cart-total-value").textContent = formatPrice(cartTotal());
+  }
+
+  function openCart() {
+    renderCart();
+    if (!cartDialog.open) cartDialog.showModal();
+  }
+
+  // Quantity steppers, shared by the product dialog and the basket.
+  document.addEventListener("click", (e) => {
+    const step = e.target.closest("[data-qty] [data-step]");
+    if (!step) return;
+    const input = step.parentElement.querySelector("input");
+    input.value = clampQty(Number(input.value) + Number(step.dataset.step));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+
+  dlg.order.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const data = new FormData(dlg.order);
+    const id = dlg.order.dataset.id;
+    addToCart(id, data.get("size"), data.get("variant") || "", clampQty(data.get("qty")));
+    dlg.qty.value = 1;
+    const name = PRODUCTS.find((x) => x.id === id).name;
+    dlg.added.replaceChildren(
+      `Added ${name} to your basket. `,
+      el("button", { type: "button", class: "link-btn dialog-view-cart", text: "View basket" })
+    );
+  });
+
+  dlg.added.addEventListener("click", (e) => {
+    if (!e.target.closest(".dialog-view-cart")) return;
+    closeProduct();
+    openCart();
+  });
+
+  cartToggle.addEventListener("click", openCart);
+
+  cartItemsEl.addEventListener("change", (e) => {
+    const input = e.target.closest("input[data-index]");
+    if (!input) return;
+    cart[Number(input.dataset.index)].qty = clampQty(input.value);
+    cartChanged();
+  });
+
+  cartItemsEl.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-remove]");
+    if (!btn) return;
+    cart.splice(Number(btn.dataset.remove), 1);
+    cartChanged();
+  });
+
+  cartForm.addEventListener("change", (e) => {
+    if (e.target.name !== "method") return;
+    const delivery = e.target.value === "Delivery";
+    cartAddress.hidden = !delivery;
+    cartAddress.querySelector("textarea").required = delivery;
+  });
+
+  function orderMessage(name, method, address) {
+    const lines = cart.map((item) => {
+      const { product, price } = resolve(item);
+      const scent = item.variant ? ` (${item.variant})` : "";
+      const note = price.note ? ` [${price.note.toLowerCase()}]` : "";
+      return `• ${item.qty} × ${product.name}${scent}, ${price.label}${note}: ${formatPrice(lineTotal(item))}`;
+    });
+    return [
+      "Hi Naturally Nella! I'd like to place an order:",
+      "",
+      ...lines,
+      "",
+      `Total: ${formatPrice(cartTotal())}`,
+      "",
+      `Name: ${name}`,
+      `Delivery or collection: ${method}`,
+      method === "Delivery" ? `Delivery address: ${address}` : null,
+    ].filter((l) => l !== null).join("\n");
+  }
+
+  cartForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!cart.length) return;
+    const data = new FormData(cartForm);
+    const text = orderMessage(
+      String(data.get("name")).trim(),
+      data.get("method"),
+      String(data.get("address") || "").trim()
+    );
+    const url = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(text)}`;
+    const win = window.open(url, "_blank");
+    if (win) win.opener = null;
+    else location.href = url;
+    cartSent.hidden = false;
+  });
+
+  cartDialog.querySelector(".cart-clear").addEventListener("click", () => {
+    cart = [];
+    cartChanged();
+    cartForm.reset();
+    cartAddress.hidden = true;
+    cartDialog.close();
+  });
+
+  cartDialog.querySelector(".cart-close").addEventListener("click", () => cartDialog.close());
+  cartDialog.querySelector(".cart-browse").addEventListener("click", () => cartDialog.close());
+  cartDialog.addEventListener("click", (e) => {
+    if (e.target === cartDialog) cartDialog.close(); // backdrop click
+  });
+
   /* ---------- Mobile nav ---------- */
   navToggle.addEventListener("click", () => {
     const open = navToggle.getAttribute("aria-expanded") === "true";
@@ -293,5 +502,6 @@
   document.querySelectorAll("[data-whatsapp]").forEach((a) => (a.href = whatsappLink()));
   renderFilters();
   renderProducts();
+  renderCart();
   syncFromHash();
 })();
