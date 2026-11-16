@@ -159,7 +159,7 @@
     const blocks = [];
     const intro = p.intro || [];
     if (!intro.length) {
-      blocks.push(el("p", { class: "coming-soon", text: "Full description coming soon." }));
+      blocks.push(el("p", { class: "coming-soon", text: "More details coming soon. In the meantime, message us on WhatsApp to ask about this product." }));
     }
     intro.forEach((t) => blocks.push(el("p", { text: t })));
     (p.sections || []).forEach((s) => {
