@@ -559,7 +559,7 @@ const DELIVERY = [
   {
     id: "local",
     label: "Local delivery",
-    note: "Free in Kuils River on orders of R100 or more. R25 per 5 km outside Kuils River, added to your invoice.",
+    note: "Free in Kuils River on orders of R100 or more. Outside Kuils River, delivery is R25 per 5 km and is included in your invoice.",
     fee: null,
     address: true,
   },

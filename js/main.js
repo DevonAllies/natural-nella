@@ -353,7 +353,7 @@
     return {
       subtotal,
       delivery: d,
-      feeText: !d ? "" : d.fee === null ? "Added to your invoice" : d.fee ? formatPrice(d.fee) : "Free",
+      feeText: !d ? "" : d.fee === null ? "Included in your invoice" : d.fee ? formatPrice(d.fee) : "Free",
       total: subtotal + (fixedFee ? d.fee : 0),
       totalLabel: d && d.fee === null ? "Total (excl. delivery)" : "Total",
     };
@@ -555,7 +555,7 @@
 
   function deliveryLine(t) {
     const d = t.delivery;
-    return d.fee === null ? `${d.label} (fee added to invoice)` : d.fee ? `${d.label}, ${formatPrice(d.fee)}` : d.label;
+    return d.fee === null ? `${d.label} (fee included in invoice)` : d.fee ? `${d.label}, ${formatPrice(d.fee)}` : d.label;
   }
 
   function orderMessage(o, t) {
