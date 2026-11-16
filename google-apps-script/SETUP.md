@@ -53,6 +53,7 @@ Each order is a new row at the bottom:
 
 - **Status:** a drop-down. New → Invoiced → Paid → Packed → Sent / collected. Use **Not received** if the order is in the sheet but the WhatsApp message never arrived (the customer didn't press send), and **Cancelled** if it falls through.
 - **Paid:** tick when the money reflects.
+- **Total:** the amount owed, next to Paid. For local delivery it excludes the delivery fee (the Notes column says so), because that fee depends on distance and goes on the invoice. Amounts are numbers, so selecting the column shows their sum at the bottom right.
 - **Map** and **Location pin:** tap to open Google Maps with directions.
 - **Notes:** free for your own notes.
 
@@ -61,3 +62,5 @@ Filter or sort with **Data → Create a filter**. Deleting a row is fine. Order 
 ## Changing the script later
 
 After editing the code in Apps Script, click **Deploy → Manage deployments**, click the pencil icon, set **Version** to **New version** and click **Deploy**. This keeps the same URL, so the website doesn't need changing. Creating a *new deployment* instead gives a new URL, and the website would need updating.
+
+If you change the columns (for example after updating the script), run **setup** again from the Apps Script editor to rewrite the headings. Rows added before the change keep their old column positions, so delete or move them first.
