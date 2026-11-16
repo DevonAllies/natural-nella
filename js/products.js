@@ -527,7 +527,7 @@ const PRODUCTS = [
  * ending in /exec. Leave it empty and orders get random numbers like NN-261116-K7Q2.
  */
 const ORDER_SHEET = {
-  url: "",
+  url: "https://script.google.com/macros/s/AKfycbxzWg48I6sWdwI4NsAUnwrO-tWsm32vSEw6OUv8lypALwEZDogkMoYUQVAWR8c3-aGcrw/exec",
 };
 
 /* ---------- Contact ---------- */
