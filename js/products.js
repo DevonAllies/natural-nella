@@ -524,7 +524,7 @@ const PRODUCTS = [
 /* ---------- Contact ---------- */
 
 const CONTACT = {
-  instagram: { handle: "@naturallynella", url: "https://www.instagram.com/naturallynella/" },
+  instagram: { handle: "@_naturallynella_", url: "https://www.instagram.com/_naturallynella_/" },
   email: "naturallynella3@gmail.com",
   whatsapp: "27845051127", // Danelle, international format for wa.me links
   phones: [
