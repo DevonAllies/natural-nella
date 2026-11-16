@@ -402,15 +402,22 @@
     dlg.qty.value = 1;
     const name = PRODUCTS.find((x) => x.id === id).name;
     dlg.added.replaceChildren(
-      `Added ${name} to your basket. `,
-      el("button", { type: "button", class: "link-btn dialog-view-cart", text: "View basket" })
+      el("span", { class: "dialog-added-msg", text: `Added ${name} to your basket.` }),
+      el("span", { class: "dialog-added-actions" }, [
+        el("button", { type: "button", class: "btn btn-ghost dialog-keep-shopping", text: "Continue shopping" }),
+        el("button", { type: "button", class: "btn btn-primary dialog-view-cart", text: "Go to basket" }),
+      ])
     );
+    dlg.added.querySelector(".dialog-view-cart").focus();
   });
 
   dlg.added.addEventListener("click", (e) => {
-    if (!e.target.closest(".dialog-view-cart")) return;
-    closeProduct();
-    openCart();
+    if (e.target.closest(".dialog-keep-shopping")) {
+      closeProduct();
+    } else if (e.target.closest(".dialog-view-cart")) {
+      closeProduct();
+      openCart();
+    }
   });
 
   cartToggle.addEventListener("click", openCart);
