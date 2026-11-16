@@ -79,7 +79,8 @@ function doPost(e) {
     row[COL.Status - 1] = "New";
     row[COL.Paid - 1] = false;
     row[COL.Name - 1] = cell(data.name, 100);
-    row[COL.Phone - 1] = cell(data.phone, 40);
+    // The leading ' stores it as text, so Sheets keeps the leading 0 (082...) instead of making it a number.
+    row[COL.Phone - 1] = "'" + text(data.phone).slice(0, 40);
     row[COL.Email - 1] = cell(data.email, 200);
     row[COL.Delivery - 1] = cell(data.delivery, 100);
     row[COL.Address - 1] = cell(data.address, 400);
