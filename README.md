@@ -15,9 +15,17 @@ Opening `index.html` directly in a browser also works.
 
 ## Editing products
 
-All products live in [`js/products.js`](js/products.js). To add a product description, fill in its `description` field (blank lines start new paragraphs). Until a description is filled in, the site shows "Full description coming soon."
+All products, prices and contact details live in [`js/products.js`](js/products.js). The comment at the top of that file explains each field. In short, each product has `prices` (in rand), `intro` paragraphs, and `sections` with a title plus paragraphs or a list. A product can also have an optional `tip` and `note`. If a product's `intro` is empty, the site shows "Full description coming soon."
 
-To add a product, add an entry to `PRODUCTS` and put its photos in `img/products/`.
+To add a product, add an entry to `PRODUCTS` and put its photos in `img/products/`. A product with no photos (`images: []`) shows the logo instead.
+
+## Editing other copy
+
+The About section ("Our story"), the Gifts section and the contact details are in [`index.html`](index.html). The About text is the owner's own story, so don't reword it. The contact block in `index.html` is static, so keep it in sync with `CONTACT` in `js/products.js`.
+
+## Contact form
+
+The contact form is delivered to the business email by [FormSubmit](https://formsubmit.co). The first submission sends an activation email to that address, and no messages are delivered until the link in that email is clicked.
 
 ## Publishing on GitHub Pages
 
