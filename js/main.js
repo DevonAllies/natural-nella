@@ -165,6 +165,7 @@
     dlg.variantField.hidden = !p.variants;
     dlg.variant.disabled = !p.variants;
     dlg.qty.value = 1;
+    dlg.order.classList.remove("is-added");
     dlg.added.replaceChildren();
 
     dlg.whatsapp.href = whatsappLink(p);
@@ -398,21 +399,49 @@
     e.preventDefault();
     const data = new FormData(dlg.order);
     const id = dlg.order.dataset.id;
-    addToCart(id, data.get("size"), data.get("variant") || "", clampQty(data.get("qty")));
+    // Ignore a second tap while the confirmation is showing, so one tap adds once.
+    if (dlg.order.classList.contains("is-added")) return;
+    const size = data.get("size");
+    const variant = data.get("variant") || "";
+    const qty = clampQty(data.get("qty"));
+    addToCart(id, size, variant, qty);
     dlg.qty.value = 1;
     const name = PRODUCTS.find((x) => x.id === id).name;
+    const count = cart.reduce((n, i) => n + i.qty, 0);
+    // Swap the Add button for a confirmation, so it is clear the item went in
+    // and it can't be added again by tapping twice.
+    dlg.order.classList.add("is-added");
     dlg.added.replaceChildren(
-      el("span", { class: "dialog-added-msg", text: `Added ${name} to your basket.` }),
+      el("span", { class: "dialog-added-msg" }, [
+        el("strong", { text: "✓ Added to your basket" }),
+        el("span", { text: `${qty} × ${name}, ${[size, variant].filter(Boolean).join(", ")}` }),
+        el("span", { class: "dialog-added-count", text: `Your basket now has ${count} item${count === 1 ? "" : "s"}.` }),
+      ]),
       el("span", { class: "dialog-added-actions" }, [
         el("button", { type: "button", class: "btn btn-ghost dialog-keep-shopping", text: "Continue shopping" }),
         el("button", { type: "button", class: "btn btn-primary dialog-view-cart", text: "Go to basket" }),
-      ])
+      ]),
+      el("button", { type: "button", class: "link-btn dialog-add-more", text: "Add another size or scent" })
     );
-    dlg.added.querySelector(".dialog-view-cart").focus();
+    dlg.added.querySelector(".dialog-view-cart").focus({ preventScroll: true });
+    dlg.added.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  });
+
+  function resetAdded() {
+    dlg.order.classList.remove("is-added");
+    dlg.added.replaceChildren();
+  }
+
+  // Choosing a different size or scent brings the Add button back.
+  dlg.order.addEventListener("change", (e) => {
+    if (e.target.name === "size" || e.target.name === "variant") resetAdded();
   });
 
   dlg.added.addEventListener("click", (e) => {
-    if (e.target.closest(".dialog-keep-shopping")) {
+    if (e.target.closest(".dialog-add-more")) {
+      resetAdded();
+      dlg.order.querySelector('.dialog-buy [type="submit"]').focus();
+    } else if (e.target.closest(".dialog-keep-shopping")) {
       closeProduct();
     } else if (e.target.closest(".dialog-view-cart")) {
       closeProduct();

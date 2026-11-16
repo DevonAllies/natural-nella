@@ -445,7 +445,16 @@ h1 em, h2 em { color: var(--rose); font-style: italic; }
 .dialog-buy { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
 .dialog-added { margin: 0.75rem 0 0; min-height: 1.5em; font-size: 0.95rem; color: var(--rose); }
 .dialog-added:empty { min-height: 0; }
-.dialog-added-msg { display: block; }
+.dialog-order.is-added .dialog-buy { display: none; }
+.dialog-added:not(:empty) {
+  margin-top: 0; padding: 1rem;
+  background: var(--rose-tint); border: 1px solid var(--rose); border-radius: var(--radius);
+  scroll-margin: 1rem;
+}
+.dialog-added-msg { display: flex; flex-direction: column; gap: 0.2rem; color: var(--charcoal); }
+.dialog-added-msg strong { color: var(--rose); font-size: 1.05rem; font-weight: 500; }
+.dialog-added-count { font-size: 0.88rem; color: var(--charcoal-soft); }
+.dialog-add-more { display: block; margin-top: 0.75rem; font-size: 0.88rem; }
 .dialog-added-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.6rem; }
 .dialog-added-actions .btn { flex: 1 1 auto; }
 .link-btn {
