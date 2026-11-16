@@ -570,6 +570,7 @@
       Order: orderLines().join("\n"),
       Subtotal: formatPrice(t.subtotal),
       [t.totalLabel]: formatPrice(t.total),
+      ...(o.sheetNote ? { "Order sheet": o.sheetNote } : {}),
       Note: "Sent from the website basket. The customer was taken to WhatsApp to send this order; check WhatsApp to see if it arrived.",
     };
     fetch(endpoint, {
@@ -580,13 +581,67 @@
     }).catch((err) => console.error("Order email error:", err));
   }
 
-  cartForm.addEventListener("submit", (e) => {
+  // Optional Google Sheet order list (google-apps-script/SETUP.md). It numbers the
+  // order NN-0001, NN-0002, ... and adds a row. Returns null if it isn't set up or
+  // doesn't answer in time, and the order then gets a random number instead.
+  const SHEET_TIMEOUT_MS = 8000;
+
+  async function recordOrder(o, t) {
+    const url = typeof ORDER_SHEET !== "undefined" && ORDER_SHEET.url;
+    if (!url) return null;
+    const withAddress = t.delivery.address;
+    const payload = {
+      name: o.name,
+      phone: o.phone,
+      email: o.email,
+      delivery: deliveryLine(t),
+      address: withAddress ? addressText(o) : "",
+      map: withAddress ? addressMapLink(o) : "",
+      pin: withAddress && o.pin ? mapLink(o.pin) : "",
+      items: orderLines().join("\n"),
+      subtotal: formatPrice(t.subtotal),
+      deliveryFee: t.feeText,
+      total: t.totalLabel === "Total" ? formatPrice(t.total) : `${formatPrice(t.total)} (excl. delivery)`,
+    };
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), SHEET_TIMEOUT_MS);
+    try {
+      // text/plain keeps this a "simple" request, which Apps Script accepts cross-origin.
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload),
+        signal: ctrl.signal,
+      });
+      const json = await res.json();
+      return json.ok && /^NN-\d+$/.test(json.number) ? json.number : null;
+    } catch (err) {
+      console.error("Order sheet error:", err);
+      return null;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  const sendBtn = cartForm.querySelector(".cart-send");
+  const sendLabel = sendBtn.textContent;
+
+  function openWhatsApp(url, win) {
+    if (win && !win.closed) win.location.replace(url);
+    else {
+      const w = window.open(url, "_blank");
+      if (w) w.opener = null;
+      else location.href = url; // pop-up blocked: go to WhatsApp in this tab
+    }
+  }
+
+  cartForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!cart.length) return;
+    if (!cart.length || sendBtn.disabled) return;
     const data = new FormData(cartForm);
     const field = (k) => String(data.get(k) || "").trim();
+    const isBot = Boolean(field("_honey"));
     const order = {
-      number: newOrderNumber(),
       name: field("name"),
       phone: field("phone"),
       email: field("email"),
@@ -598,8 +653,36 @@
       pin: field("pin"),
     };
     const t = sums();
+    const useSheet = !isBot && typeof ORDER_SHEET !== "undefined" && Boolean(ORDER_SHEET.url);
+
+    // Waiting for the sheet loses the "user tapped" permission to open a tab, so
+    // open it now and point it at WhatsApp once the order number is back.
+    let win = null;
+    if (useSheet) {
+      win = window.open("", "_blank");
+      if (win) {
+        win.opener = null;
+        try {
+          win.document.title = "Opening WhatsApp…";
+          win.document.body.textContent = "Opening WhatsApp…";
+        } catch {
+          /* ignore */
+        }
+      }
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Placing your order…";
+      cartForm.inert = true;
+      cartItemsEl.inert = true;
+    }
+
+    const sheetNumber = useSheet ? await recordOrder(order, t) : null;
+    order.number = sheetNumber || newOrderNumber();
+    if (useSheet && !sheetNumber) {
+      order.sheetNote = "Not in the order sheet (it couldn't be reached). Please add it by hand.";
+    }
+
     const url = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(orderMessage(order, t))}`;
-    if (!field("_honey")) emailOrder(order, t); // skip the email if a bot filled the honeypot
+    if (!isBot) emailOrder(order, t);
     cartDialog.querySelector(".cart-done-number").textContent = order.number;
 
     // The order now lives in the WhatsApp message, so empty the basket.
@@ -608,11 +691,13 @@
     cartForm.reset();
     showAddress(false);
     setPin("");
+    sendBtn.disabled = false;
+    sendBtn.textContent = sendLabel;
+    cartForm.inert = false;
+    cartItemsEl.inert = false;
     cartDialog.classList.add("is-sent");
 
-    const win = window.open(url, "_blank");
-    if (win) win.opener = null;
-    else location.href = url; // pop-up blocked: go to WhatsApp in this tab
+    openWhatsApp(url, win);
   });
 
   cartDialog.querySelector(".cart-close").addEventListener("click", () => cartDialog.close());

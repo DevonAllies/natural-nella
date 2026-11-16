@@ -522,6 +522,14 @@ const PRODUCTS = [
   },
 ];
 
+/* ---------- Order sheet ----------
+ * Web app URL of the Google Sheet order list (see google-apps-script/SETUP.md),
+ * ending in /exec. Leave it empty and orders get random numbers like NN-261116-K7Q2.
+ */
+const ORDER_SHEET = {
+  url: "",
+};
+
 /* ---------- Contact ---------- */
 
 const CONTACT = {

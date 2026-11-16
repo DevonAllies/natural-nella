@@ -23,6 +23,10 @@ To add a product, add an entry to `PRODUCTS` and put its photos in `img/products
 
 Visitors add products to a basket (choosing size, scent and quantity), then send the whole order to Danelle's WhatsApp with an order number, their name, phone number, email (optional) and how they want it delivered: collection in Kuils River, local delivery, or Aramex courier (R90, added to the total). The delivery options and fees are in `DELIVERY` at the bottom of `js/products.js`. For delivery, customers fill in their street, complex/unit (optional), suburb, town and postal code, and can tap "Use my current location" to add a map pin. Each order includes a Google Maps link to the address (and the pin, if shared) so Danelle can tap through to directions. The basket empties once the order is sent, and a copy of the order is emailed to the business inbox through FormSubmit. Danelle sends the invoice herself once she has confirmed the order. Nothing is paid on the site: availability, delivery costs and payment are arranged on WhatsApp. The basket is saved in the visitor's own browser.
 
+### Order sheet (optional)
+
+Orders can also be recorded in a Google Sheet, which numbers them NN-0001, NN-0002 and so on and has columns for status and payment. Follow [`google-apps-script/SETUP.md`](google-apps-script/SETUP.md), then put the web app URL in `ORDER_SHEET` in `js/products.js`. Until then, orders get random numbers like NN-261116-K7Q2.
+
 ## Editing other copy
 
 The About section ("Our story"), the Gifts section and the contact details are in [`index.html`](index.html). The About text is the owner's own story, so don't reword it. The contact block in `index.html` is static, so keep it in sync with `CONTACT` in `js/products.js`.
