@@ -324,7 +324,59 @@
         ]);
       })
     );
-    cartDialog.querySelector(".cart-total-value").textContent = formatPrice(cartTotal());
+    renderSums();
+  }
+
+  /* Delivery options come from DELIVERY in products.js. */
+  const methodOptions = cartForm.querySelector(".cart-method-options");
+  methodOptions.replaceChildren(
+    ...DELIVERY.map((d) =>
+      el("label", { class: "cart-method-option" }, [
+        el("input", { type: "radio", name: "method", value: d.id, required: "" }),
+        el("span", {}, [
+          el("span", { class: "cart-method-label", text: d.fee ? `${d.label} (${formatPrice(d.fee)})` : d.label }),
+          d.note ? el("small", { text: d.note }) : null,
+        ]),
+      ])
+    )
+  );
+
+  const chosenDelivery = () => DELIVERY.find((d) => d.id === cartForm.elements.method.value) || null;
+
+  // Subtotal, delivery fee and total. A null fee (local delivery) is distance-based
+  // and goes on the invoice, so the total is shown excluding delivery.
+  function sums() {
+    const subtotal = cartTotal();
+    const d = chosenDelivery();
+    const fixedFee = d && typeof d.fee === "number";
+    return {
+      subtotal,
+      delivery: d,
+      feeText: !d ? "" : d.fee === null ? "Added to your invoice" : d.fee ? formatPrice(d.fee) : "Free",
+      total: subtotal + (fixedFee ? d.fee : 0),
+      totalLabel: d && d.fee === null ? "Total (excl. delivery)" : "Total",
+    };
+  }
+
+  function renderSums() {
+    const t = sums();
+    cartDialog.querySelector(".cart-sub-value").textContent = formatPrice(t.subtotal);
+    const feeRow = cartDialog.querySelector(".cart-fee");
+    feeRow.hidden = !t.delivery || t.delivery.id === "collection";
+    cartDialog.querySelector(".cart-fee-value").textContent = t.feeText;
+    cartDialog.querySelector(".cart-total-label").textContent = t.totalLabel;
+    cartDialog.querySelector(".cart-total-value").textContent = formatPrice(t.total);
+  }
+
+  // e.g. NN-261116-K7Q2: date plus four random characters (no 0/O, 1/I/L).
+  // There is no server to hand out sequential numbers.
+  function newOrderNumber() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const date = `${String(d.getFullYear()).slice(2)}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+    const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+    const code = Array.from(crypto.getRandomValues(new Uint8Array(4)), (b) => chars[b % chars.length]).join("");
+    return `NN-${date}-${code}`;
   }
 
   function openCart() {
@@ -379,9 +431,10 @@
 
   cartForm.addEventListener("change", (e) => {
     if (e.target.name !== "method") return;
-    const delivery = e.target.value === "Delivery";
-    cartAddress.hidden = !delivery;
-    cartAddress.querySelector("textarea").required = delivery;
+    const needsAddress = Boolean(chosenDelivery() && chosenDelivery().address);
+    cartAddress.hidden = !needsAddress;
+    cartAddress.querySelector("textarea").required = needsAddress;
+    renderSums();
   });
 
   function orderLines() {
@@ -393,38 +446,47 @@
     });
   }
 
-  function orderMessage({ name, phone, email, method, address }) {
+  function deliveryLine(t) {
+    const d = t.delivery;
+    return d.fee === null ? `${d.label} (fee added to invoice)` : d.fee ? `${d.label}, ${formatPrice(d.fee)}` : d.label;
+  }
+
+  function orderMessage(o, t) {
     return [
-      "Hi Naturally Nella! I'd like to place an order:",
+      "Hi Naturally Nella! I'd like to place an order.",
+      `Order number: ${o.number}`,
       "",
       ...orderLines(),
       "",
-      `Total: ${formatPrice(cartTotal())}`,
+      `Subtotal: ${formatPrice(t.subtotal)}`,
+      `Delivery: ${deliveryLine(t)}`,
+      `${t.totalLabel}: ${formatPrice(t.total)}`,
       "",
-      `Name: ${name}`,
-      `Phone: ${phone}`,
-      email ? `Email: ${email}` : null,
-      `Delivery or collection: ${method}`,
-      method === "Delivery" ? `Delivery address: ${address}` : null,
+      `Name: ${o.name}`,
+      `Phone: ${o.phone}`,
+      o.email ? `Email: ${o.email}` : null,
+      t.delivery.address ? `Delivery address: ${o.address}` : null,
     ].filter((l) => l !== null).join("\n");
   }
 
   // A copy of every order goes to the business inbox through FormSubmit (same
   // address as the contact form). It is a record only; WhatsApp is the real order.
-  function emailOrder(o) {
+  function emailOrder(o, t) {
     const endpoint = document.getElementById("contact-form").action
       .replace("formsubmit.co/", "formsubmit.co/ajax/");
     const body = {
-      _subject: `New website order from ${o.name} (${formatPrice(cartTotal())})`,
+      _subject: `New website order ${o.number} from ${o.name} (${formatPrice(t.total)})`,
       _template: "table",
       _captcha: "false",
+      "Order number": o.number,
       Name: o.name,
       Phone: o.phone,
       ...(o.email ? { email: o.email } : {}), // "email" sets the reply-to address
-      "Delivery or collection": o.method,
-      ...(o.method === "Delivery" ? { "Delivery address": o.address } : {}),
+      Delivery: deliveryLine(t),
+      ...(t.delivery.address ? { "Delivery address": o.address } : {}),
       Order: orderLines().join("\n"),
-      Total: formatPrice(cartTotal()),
+      Subtotal: formatPrice(t.subtotal),
+      [t.totalLabel]: formatPrice(t.total),
       Note: "Sent from the website basket. The customer was taken to WhatsApp to send this order; check WhatsApp to see if it arrived.",
     };
     fetch(endpoint, {
@@ -441,14 +503,16 @@
     const data = new FormData(cartForm);
     const field = (k) => String(data.get(k) || "").trim();
     const order = {
+      number: newOrderNumber(),
       name: field("name"),
       phone: field("phone"),
       email: field("email"),
-      method: field("method"),
       address: field("address"),
     };
-    const url = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(orderMessage(order))}`;
-    if (!field("_honey")) emailOrder(order); // skip the email if a bot filled the honeypot
+    const t = sums();
+    const url = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(orderMessage(order, t))}`;
+    if (!field("_honey")) emailOrder(order, t); // skip the email if a bot filled the honeypot
+    cartDialog.querySelector(".cart-done-number").textContent = order.number;
 
     // The order now lives in the WhatsApp message, so empty the basket.
     cart = [];

@@ -100,7 +100,7 @@
         <div class="gifts-copy">
           <p class="eyebrow">Gifts &amp; markets</p>
           <h2>Something special for someone special</h2>
-          <p>Our products are available as gift boxes and hampers, wrapped with care. Find us at local markets, or get in touch to put together a gift of your own.</p>
+          <p>Our products are available as gift boxes and hampers, wrapped with care. Find us at local markets, or get in touch to put together a gift of your own. Please place gift set orders at least 5 days in advance.</p>
           <a href="#contact" class="btn btn-primary" data-topic="Gift box or hamper">Enquire about gifts</a>
         </div>
         <div class="gifts-media">
@@ -243,7 +243,6 @@
       </div>
       <div class="cart-filled">
         <ul class="cart-items"></ul>
-        <p class="cart-total"><span>Total</span><span class="cart-total-value"></span></p>
         <form class="cart-form">
           <input type="text" name="_honey" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
           <label class="field">
@@ -260,20 +259,25 @@
           </label>
           <fieldset class="field cart-method">
             <legend>Delivery or collection</legend>
-            <label><input type="radio" name="method" value="Delivery" required> Delivery</label>
-            <label><input type="radio" name="method" value="Collection"> Collection</label>
+            <div class="cart-method-options"></div>
           </fieldset>
           <label class="field cart-address" hidden>
             <span>Delivery address</span>
             <textarea name="address" rows="3" autocomplete="street-address"></textarea>
           </label>
-          <p class="cart-fine">We'll confirm availability, delivery costs and payment with you on WhatsApp.</p>
+          <dl class="cart-sums">
+            <div><dt>Subtotal</dt><dd class="cart-sub-value"></dd></div>
+            <div class="cart-fee" hidden><dt>Delivery</dt><dd class="cart-fee-value"></dd></div>
+            <div class="cart-total"><dt class="cart-total-label">Total</dt><dd class="cart-total-value"></dd></div>
+          </dl>
+          <p class="cart-fine">We'll send you an invoice once your order is placed. Your order is confirmed once proof of payment is sent and the funds reflect in our account.</p>
           <button type="submit" class="btn btn-primary cart-send">Send order on WhatsApp</button>
         </form>
       </div>
       <div class="cart-done" role="status">
         <p class="cart-done-title">Thank you for your order!</p>
-        <p>WhatsApp should now be open with your order typed out. Tap send there to place it, and we'll be in touch to confirm.</p>
+        <p>Your order number is <strong class="cart-done-number"></strong>.</p>
+        <p>WhatsApp should now be open with your order typed out. Tap send there to place it, and we'll send you an invoice.</p>
         <a href="#shop" class="btn btn-ghost cart-browse">Continue browsing</a>
       </div>
     </div>

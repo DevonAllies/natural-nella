@@ -21,7 +21,7 @@ To add a product, add an entry to `PRODUCTS` and put its photos in `img/products
 
 ## Ordering
 
-Visitors add products to a basket (choosing size, scent and quantity), then send the whole order to Danelle's WhatsApp with their name, phone number, email (optional) and whether they want delivery or collection. The basket empties once the order is sent, and a copy of the order is emailed to the business inbox through FormSubmit. Danelle sends the invoice herself once she has confirmed the order. Nothing is paid on the site: availability, delivery costs and payment are arranged on WhatsApp. The basket is saved in the visitor's own browser.
+Visitors add products to a basket (choosing size, scent and quantity), then send the whole order to Danelle's WhatsApp with an order number, their name, phone number, email (optional) and how they want it delivered: collection in Kuils River, local delivery, or Aramex courier (R90, added to the total). The delivery options and fees are in `DELIVERY` at the bottom of `js/products.js`. The basket empties once the order is sent, and a copy of the order is emailed to the business inbox through FormSubmit. Danelle sends the invoice herself once she has confirmed the order. Nothing is paid on the site: availability, delivery costs and payment are arranged on WhatsApp. The basket is saved in the visitor's own browser.
 
 ## Editing other copy
 

@@ -533,3 +533,32 @@ const CONTACT = {
     { name: "Cathy", display: "072 338 9601", tel: "+27723389601" },
   ],
 };
+
+/* ---------- Delivery & collection (basket checkout) ----------
+ * From the owner's ordering policy. fee: a number is added to the basket total;
+ * null means the fee depends on distance and is added to the invoice.
+ * address: whether checkout asks for a delivery address.
+ */
+const DELIVERY = [
+  {
+    id: "collection",
+    label: "Collection in Kuils River",
+    note: "",
+    fee: 0,
+    address: false,
+  },
+  {
+    id: "local",
+    label: "Local delivery",
+    note: "Free in Kuils River on orders of R100 or more. R25 per 5 km outside Kuils River, added to your invoice.",
+    fee: null,
+    address: true,
+  },
+  {
+    id: "courier",
+    label: "Aramex courier, store to door",
+    note: "For deliveries outside the Kuils River area.",
+    fee: 90,
+    address: true,
+  },
+];
