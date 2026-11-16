@@ -27,6 +27,14 @@ Visitors add products to a basket (choosing size, scent and quantity), then send
 
 Orders can also be recorded in a Google Sheet, which numbers them NN-0001, NN-0002 and so on and has columns for status and payment. Follow [`google-apps-script/SETUP.md`](google-apps-script/SETUP.md), then put the web app URL in `ORDER_SHEET` in `js/products.js`. Until then, orders get random numbers like NN-261116-K7Q2.
 
+#### How order numbers work
+
+- **When the order reaches the sheet**, it gets the next number in the series (NN-0001, NN-0002, …). Only the sheet hands these out, and its count only goes up when it actually saves an order. Deleting a row never frees its number for reuse.
+- **When the sheet can't be reached** (the website waits up to 20 seconds), the order still goes to WhatsApp and the business inbox, but with a number made from the date plus four random characters, like `NN-261116-KF8K`. The sheet's count doesn't change, so the next order that reaches the sheet carries on in sequence. For example, NN-0004 is saved, NN-261116-AB7Q misses the sheet, and the next order gets NN-0005.
+- The two formats can never clash. Two missed orders could only share a number if they fell on the same day and drew the same four characters, which is about a one-in-a-million chance.
+- **Adding a missed order by hand:** the order email says "Not in the order sheet". Copy the details into a new row at the bottom of the Orders tab and **keep the customer's date-and-letters number**. Never give it the next NN-000x number: the sheet doesn't know about numbers typed in by hand, so it would give that same number to the next website order.
+- **A gap in the series** (NN-0004, then NN-0006) means the sheet saved an order but the website stopped waiting before the number came back, so the customer got a date-and-letters number instead. Match it up using the order email.
+
 ## Editing other copy
 
 The About section ("Our story"), the Gifts section and the contact details are in [`index.html`](index.html). The About text is the owner's own story, so don't reword it. The contact block in `index.html` is static, so keep it in sync with `CONTACT` in `js/products.js`.
