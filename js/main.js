@@ -431,11 +431,70 @@
 
   cartForm.addEventListener("change", (e) => {
     if (e.target.name !== "method") return;
-    const needsAddress = Boolean(chosenDelivery() && chosenDelivery().address);
-    cartAddress.hidden = !needsAddress;
-    cartAddress.querySelector("textarea").required = needsAddress;
+    showAddress(Boolean(chosenDelivery() && chosenDelivery().address));
     renderSums();
   });
+
+  // A disabled fieldset is skipped by validation and FormData, so the address
+  // fields are only required when a delivery option is chosen.
+  function showAddress(show) {
+    cartAddress.hidden = !show;
+    cartAddress.disabled = !show;
+  }
+
+  /* Delivery location: an optional map pin from the device's location. */
+  const pinInput = cartForm.elements.pin;
+  const locateBtn = cartForm.querySelector(".cart-locate");
+  const locationStatus = cartForm.querySelector(".cart-location-status");
+  const mapLink = (query) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+
+  function setPin(pin) {
+    pinInput.value = pin;
+    if (!pin) {
+      locationStatus.replaceChildren();
+      return;
+    }
+    locationStatus.replaceChildren(
+      "Location added. ",
+      el("a", { href: mapLink(pin), target: "_blank", rel: "noopener", text: "Check it on the map" }),
+      " · ",
+      el("button", { type: "button", class: "link-btn cart-unpin", text: "Remove" })
+    );
+  }
+
+  locateBtn.addEventListener("click", () => {
+    if (!("geolocation" in navigator)) {
+      locationStatus.textContent = "Your browser can't share a location. Your address is enough.";
+      return;
+    }
+    locateBtn.disabled = true;
+    locationStatus.textContent = "Finding your location…";
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        locateBtn.disabled = false;
+        setPin(`${pos.coords.latitude.toFixed(6)},${pos.coords.longitude.toFixed(6)}`);
+      },
+      (err) => {
+        locateBtn.disabled = false;
+        locationStatus.textContent =
+          err.code === err.PERMISSION_DENIED
+            ? "Location permission was not given. That's fine, your address is enough."
+            : "We couldn't find your location. That's fine, your address is enough.";
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+    );
+  });
+
+  locationStatus.addEventListener("click", (e) => {
+    if (e.target.closest(".cart-unpin")) setPin("");
+  });
+
+  function addressText(o) {
+    return [o.street, o.complex, o.suburb, o.town, o.postcode].filter(Boolean).join(", ");
+  }
+
+  // Google Maps finds the street better without the unit/complex name.
+  const addressMapLink = (o) => mapLink([o.street, o.suburb, o.town, o.postcode, "South Africa"].join(", "));
 
   function orderLines() {
     return cart.map((item) => {
@@ -465,7 +524,13 @@
       `Name: ${o.name}`,
       `Phone: ${o.phone}`,
       o.email ? `Email: ${o.email}` : null,
-      t.delivery.address ? `Delivery address: ${o.address}` : null,
+      ...(t.delivery.address
+        ? [
+            `Delivery address: ${addressText(o)}`,
+            `Map: ${addressMapLink(o)}`,
+            o.pin ? `My location pin: ${mapLink(o.pin)}` : null,
+          ]
+        : []),
     ].filter((l) => l !== null).join("\n");
   }
 
@@ -483,7 +548,13 @@
       Phone: o.phone,
       ...(o.email ? { email: o.email } : {}), // "email" sets the reply-to address
       Delivery: deliveryLine(t),
-      ...(t.delivery.address ? { "Delivery address": o.address } : {}),
+      ...(t.delivery.address
+        ? {
+            "Delivery address": addressText(o),
+            Map: addressMapLink(o),
+            ...(o.pin ? { "Location pin": mapLink(o.pin) } : {}),
+          }
+        : {}),
       Order: orderLines().join("\n"),
       Subtotal: formatPrice(t.subtotal),
       [t.totalLabel]: formatPrice(t.total),
@@ -507,7 +578,12 @@
       name: field("name"),
       phone: field("phone"),
       email: field("email"),
-      address: field("address"),
+      street: field("street"),
+      complex: field("complex"),
+      suburb: field("suburb"),
+      town: field("town"),
+      postcode: field("postcode"),
+      pin: field("pin"),
     };
     const t = sums();
     const url = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(orderMessage(order, t))}`;
@@ -518,8 +594,8 @@
     cart = [];
     cartChanged();
     cartForm.reset();
-    cartAddress.hidden = true;
-    cartAddress.querySelector("textarea").required = false;
+    showAddress(false);
+    setPin("");
     cartDialog.classList.add("is-sent");
 
     const win = window.open(url, "_blank");
