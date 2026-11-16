@@ -245,9 +245,18 @@
         <ul class="cart-items"></ul>
         <p class="cart-total"><span>Total</span><span class="cart-total-value"></span></p>
         <form class="cart-form">
+          <input type="text" name="_honey" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
           <label class="field">
             <span>Your name</span>
             <input type="text" name="name" autocomplete="name" required>
+          </label>
+          <label class="field">
+            <span>Phone number</span>
+            <input type="tel" name="phone" autocomplete="tel" inputmode="tel" pattern="[0-9+\(\)\s\-]{9,}" title="Please enter a phone number, e.g. 082 123 4567" required>
+          </label>
+          <label class="field">
+            <span>Email <small>(optional)</small></span>
+            <input type="email" name="email" autocomplete="email">
           </label>
           <fieldset class="field cart-method">
             <legend>Delivery or collection</legend>
@@ -260,11 +269,12 @@
           </label>
           <p class="cart-fine">We'll confirm availability, delivery costs and payment with you on WhatsApp.</p>
           <button type="submit" class="btn btn-primary cart-send">Send order on WhatsApp</button>
-          <div class="cart-sent" hidden>
-            <p>WhatsApp should now be open with your order. Tap send there to place it.</p>
-            <button type="button" class="btn btn-ghost cart-clear">Clear basket</button>
-          </div>
         </form>
+      </div>
+      <div class="cart-done" role="status">
+        <p class="cart-done-title">Thank you for your order!</p>
+        <p>WhatsApp should now be open with your order typed out. Tap send there to place it, and we'll be in touch to confirm.</p>
+        <a href="#shop" class="btn btn-ghost cart-browse">Continue browsing</a>
       </div>
     </div>
   </dialog>

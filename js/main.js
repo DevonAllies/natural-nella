@@ -251,7 +251,6 @@
   const cartForm = cartDialog.querySelector(".cart-form");
   const cartItemsEl = cartDialog.querySelector(".cart-items");
   const cartAddress = cartDialog.querySelector(".cart-address");
-  const cartSent = cartDialog.querySelector(".cart-sent");
 
   const clampQty = (n) => Math.min(MAX_QTY, Math.max(1, Math.round(Number(n)) || 1));
 
@@ -301,7 +300,6 @@
     cartCount.hidden = count === 0;
     cartToggle.setAttribute("aria-label", `Basket, ${count} item${count === 1 ? "" : "s"}`);
     cartDialog.classList.toggle("is-empty", cart.length === 0);
-    cartSent.hidden = true;
 
     cartItemsEl.replaceChildren(
       ...cart.map((item, index) => {
@@ -330,6 +328,7 @@
   }
 
   function openCart() {
+    cartDialog.classList.remove("is-sent");
     renderCart();
     if (!cartDialog.open) cartDialog.showModal();
   }
@@ -385,52 +384,89 @@
     cartAddress.querySelector("textarea").required = delivery;
   });
 
-  function orderMessage(name, method, address) {
-    const lines = cart.map((item) => {
+  function orderLines() {
+    return cart.map((item) => {
       const { product, price } = resolve(item);
       const scent = item.variant ? ` (${item.variant})` : "";
       const note = price.note ? ` [${price.note.toLowerCase()}]` : "";
       return `• ${item.qty} × ${product.name}${scent}, ${price.label}${note}: ${formatPrice(lineTotal(item))}`;
     });
+  }
+
+  function orderMessage({ name, phone, email, method, address }) {
     return [
       "Hi Naturally Nella! I'd like to place an order:",
       "",
-      ...lines,
+      ...orderLines(),
       "",
       `Total: ${formatPrice(cartTotal())}`,
       "",
       `Name: ${name}`,
+      `Phone: ${phone}`,
+      email ? `Email: ${email}` : null,
       `Delivery or collection: ${method}`,
       method === "Delivery" ? `Delivery address: ${address}` : null,
     ].filter((l) => l !== null).join("\n");
+  }
+
+  // A copy of every order goes to the business inbox through FormSubmit (same
+  // address as the contact form). It is a record only; WhatsApp is the real order.
+  function emailOrder(o) {
+    const endpoint = document.getElementById("contact-form").action
+      .replace("formsubmit.co/", "formsubmit.co/ajax/");
+    const body = {
+      _subject: `New website order from ${o.name} (${formatPrice(cartTotal())})`,
+      _template: "table",
+      _captcha: "false",
+      Name: o.name,
+      Phone: o.phone,
+      ...(o.email ? { email: o.email } : {}), // "email" sets the reply-to address
+      "Delivery or collection": o.method,
+      ...(o.method === "Delivery" ? { "Delivery address": o.address } : {}),
+      Order: orderLines().join("\n"),
+      Total: formatPrice(cartTotal()),
+      Note: "Sent from the website basket. The customer was taken to WhatsApp to send this order; check WhatsApp to see if it arrived.",
+    };
+    fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(body),
+      keepalive: true, // survive the page navigating to WhatsApp
+    }).catch((err) => console.error("Order email error:", err));
   }
 
   cartForm.addEventListener("submit", (e) => {
     e.preventDefault();
     if (!cart.length) return;
     const data = new FormData(cartForm);
-    const text = orderMessage(
-      String(data.get("name")).trim(),
-      data.get("method"),
-      String(data.get("address") || "").trim()
-    );
-    const url = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(text)}`;
-    const win = window.open(url, "_blank");
-    if (win) win.opener = null;
-    else location.href = url;
-    cartSent.hidden = false;
-  });
+    const field = (k) => String(data.get(k) || "").trim();
+    const order = {
+      name: field("name"),
+      phone: field("phone"),
+      email: field("email"),
+      method: field("method"),
+      address: field("address"),
+    };
+    const url = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(orderMessage(order))}`;
+    if (!field("_honey")) emailOrder(order); // skip the email if a bot filled the honeypot
 
-  cartDialog.querySelector(".cart-clear").addEventListener("click", () => {
+    // The order now lives in the WhatsApp message, so empty the basket.
     cart = [];
     cartChanged();
     cartForm.reset();
     cartAddress.hidden = true;
-    cartDialog.close();
+    cartAddress.querySelector("textarea").required = false;
+    cartDialog.classList.add("is-sent");
+
+    const win = window.open(url, "_blank");
+    if (win) win.opener = null;
+    else location.href = url; // pop-up blocked: go to WhatsApp in this tab
   });
 
   cartDialog.querySelector(".cart-close").addEventListener("click", () => cartDialog.close());
-  cartDialog.querySelector(".cart-browse").addEventListener("click", () => cartDialog.close());
+  cartDialog.querySelectorAll(".cart-browse").forEach((a) =>
+    a.addEventListener("click", () => cartDialog.close())
+  );
   cartDialog.addEventListener("click", (e) => {
     if (e.target === cartDialog) cartDialog.close(); // backdrop click
   });
